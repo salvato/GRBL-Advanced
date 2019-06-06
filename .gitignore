@@ -3,3 +3,10 @@ obj/*
 *.depend
 *.layout
 grbl-master
+build/*
+*.bin
+*.elf
+*.hex
+*.lst
+*.map
+
