@@ -1,0 +1,17 @@
+cmsis
+grbl
+HAL
+HAL/EXTI
+HAL/FLASH
+HAL/GPIO
+HAL/I2C
+HAL/SPI
+HAL/STM32
+HAL/TIM
+HAL/USART
+Libraries/CRC
+Libraries/Ethernet
+Libraries/Ethernet/utility
+Libraries/GrIP
+SPL/inc
+Src
