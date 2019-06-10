@@ -44,6 +44,7 @@
 // characters. In future versions, this will be increased, when we know how much extra
 // memory space we can invest into here or we re-write the g-code parser not to have this
 // buffer.
+// At present defined (200) in Config.h...
 #ifndef LINE_BUFFER_SIZE
   #define LINE_BUFFER_SIZE		256
 #endif
@@ -147,7 +148,7 @@ void Protocol_MainLoop(void)
 				char_counter = 0;
 
 			}
-			else {
+            else { // End of line not yet reached
 				if(line_flags) {
 					// Throw away all (except EOL) comment characters and overflow characters.
 					if(c == ')') {
@@ -159,7 +160,7 @@ void Protocol_MainLoop(void)
 				}
 				else {
 					if(c <= ' ') {
-						// Throw away whitepace and control characters
+                        // Throw away whitespace and control characters
 					}
 					else if(c == '/') {
 					// Block delete NOT SUPPORTED. Ignore character.
@@ -195,7 +196,7 @@ void Protocol_MainLoop(void)
 					}
 				}
 			}
-		}
+        }// while(Getc(&c) == 0)
 
 		// If there are no more characters in the serial read buffer to be processed and executed,
 		// this indicates that g-code streaming has either filled the planner buffer or has
@@ -208,9 +209,9 @@ void Protocol_MainLoop(void)
 			// Bail to main() program loop to reset system.
 			return;
 		}
-	}
+    }// for(;;) {
 
-	return; /* Never reached */
+    //return; /* Never reached */
 }
 
 
@@ -314,12 +315,12 @@ void Protocol_ExecRtSystem(void)
 		System_ClearExecAlarm(); // Clear alarm
 	}
 
-	rt_exec = sys_rt_exec_state; // Copy volatile sys_rt_exec_state.
+    // Gabriele Salvato to silent a QtCreator warning
+    rt_exec = sys_rt_exec_state &0xFF; // Copy volatile sys_rt_exec_state.
 	if(rt_exec) {
 		// Execute system abort.
 		if(rt_exec & EXEC_RESET) {
 			sys.abort = true;  // Only place this is set true.
-
 			return; // Nothing else to do but exit.
 		}
 
@@ -405,7 +406,7 @@ void Protocol_ExecRtSystem(void)
 					// are executed if the door switch closes and the state returns to HOLD.
 					sys.suspend |= SUSPEND_SAFETY_DOOR_AJAR;
 				}
-			}
+            }
 
 			if(rt_exec & EXEC_SLEEP) {
 				if(sys.state == STATE_ALARM) {
@@ -416,7 +417,8 @@ void Protocol_ExecRtSystem(void)
 			}
 
 			System_ClearExecStateFlag((EXEC_MOTION_CANCEL | EXEC_FEED_HOLD | EXEC_SAFETY_DOOR | EXEC_SLEEP));
-		}
+
+        } // if(rt_exec & (EXEC_MOTION_CANCEL | EXEC_FEED_HOLD | EXEC_SAFETY_DOOR | EXEC_SLEEP))
 
 		// Execute a cycle start by starting the stepper interrupt to begin executing the blocks in queue.
 		if(rt_exec & EXEC_CYCLE_START) {
@@ -462,7 +464,7 @@ void Protocol_ExecRtSystem(void)
 			}
 
 			System_ClearExecStateFlag(EXEC_CYCLE_START);
-		}
+        } // if(rt_exec & EXEC_CYCLE_START)
 
 		if(rt_exec & EXEC_CYCLE_STOP) {
 			// Reinitializes the cycle plan and stepper system after a feed hold for a resume. Called by
@@ -499,7 +501,7 @@ void Protocol_ExecRtSystem(void)
 					sys.suspend = SUSPEND_DISABLE;
 					sys.state = STATE_IDLE;
 				}
-			}
+            } // if(rt_exec & EXEC_CYCLE_STOP)
 
 			System_ClearExecStateFlag(EXEC_CYCLE_STOP);
 		}
@@ -599,8 +601,8 @@ void Protocol_ExecRtSystem(void)
 			}
 		}
 
-		// NOTE: Since coolant state always performs a planner sync whenever it changes, the current
-		// run state can be determined by checking the parser state.
+        // NOTE: Since coolant state always performs a planner sync whenever it changes,
+        // the current run state can be determined by checking the parser state.
 		// NOTE: Coolant overrides only operate during IDLE, CYCLE, HOLD, and JOG states. Ignored otherwise.
 		if(rt_exec & (EXEC_COOLANT_FLOOD_OVR_TOGGLE | EXEC_COOLANT_MIST_OVR_TOGGLE)) {
 			if((sys.state == STATE_IDLE) || (sys.state & (STATE_CYCLE | STATE_HOLD | STATE_JOG))) {

@@ -182,7 +182,8 @@ void Usart_Put(USART_TypeDef *usart, bool buffered, char c)
     }
     else
     {
-        while(USART_GetFlagStatus(usart, USART_FLAG_TC) == RESET);
+        while(USART_GetFlagStatus(usart, USART_FLAG_TC) == RESET){
+        }
 		USART_SendData(usart, c);
     }
 }

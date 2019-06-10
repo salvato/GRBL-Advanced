@@ -111,31 +111,31 @@ int main(void)
 		sys_rt_exec_accessory_override = 0;
 
 		// Reset Grbl-Advanced primary systems.
-		GC_Init();
+        GC_Init(); // G-Code interpreter Init
 		Planner_Init();
-		MC_Init();
-		TC_Init();
+        MC_Init(); // Motion Control Init
+        TC_Init(); // Tool Change Init
 
 		Coolant_Init();
 		Limits_Init();
 		Probe_Init();
-		Spindle_Init();
+        Spindle_Init();
 		Stepper_Reset();
 
 		// Sync cleared gcode and planner positions to current system position.
-		Planner_SyncPosition();
-		GC_SyncPosition();
+        Planner_SyncPosition(); // Reset the planner position vectors.
+        GC_SyncPosition(); // Sets g-code parser position in mm. Input in steps.
 
 		// Print welcome message. Indicates an initialization has occured at power-up or with a reset.
 		Report_InitMessage();
 
 		//-- Start Grbl-Advanced main loop. Processes program inputs and executes them. --//
-		Protocol_MainLoop();
+        Protocol_MainLoop(); // In Protocol.c !
 		//--------------------------------------------------------------------------------//
 
         // Clear serial buffer after soft reset to prevent undefined behavior
 		FifoUsart_Init();
 	}
 
-    return 0;
+    // return 0;
 }

@@ -38,6 +38,7 @@ Libraries/GrIP/ComIf.c
 Libraries/GrIP/ComIf.h
 Libraries/GrIP/GrIP.c
 Libraries/GrIP/GrIP.h
+Makefile
 README.md
 SPL/inc/misc.h
 SPL/inc/stm32f4xx_adc.h

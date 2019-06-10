@@ -50,6 +50,11 @@
   * @{
   */
 
+// Gabriele Salvato to silent QtCreator Warnings
+#ifndef STM32F411xE
+#define STM32F411xE
+#endif
+
 #ifndef __STM32F4xx_H
 #define __STM32F4xx_H
 

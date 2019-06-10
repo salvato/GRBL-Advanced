@@ -14,8 +14,8 @@
 #define MAX_BUFFER_SIZE     128
 
 
-char buf[512] = {0};
-uint16_t buf_idx = 0;
+static char buf[512] = {0};
+static uint16_t buf_idx = 0;
 
 
 void Print_Init(void)
@@ -112,12 +112,12 @@ void PrintFloat(float n, uint8_t decimal_places)
 	if(decimals) {
 		n *= 10;
 	}
-	n += 0.5; // Add rounding factor. Ensures carryover through entire value.
+    n += 0.5f; // Add rounding factor. Ensures carryover through entire value.
 
 	// Generate digits backwards and store in string.
 	unsigned char buf[13];
 	uint8_t i = 0;
-	uint32_t a = (long)n;
+    uint32_t a = (uint32_t)n;
 
 	while(a > 0) {
 		buf[i++] = (a % 10) + '0'; // Get digit

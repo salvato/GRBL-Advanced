@@ -6,6 +6,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 
 void Print_Init(void);
 int Printf(const char *str, ...);
