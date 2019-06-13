@@ -60,11 +60,11 @@ static char line[LINE_BUFFER_SIZE]; // Line to be executed. Zero-terminated.
 static void Protocol_ExecRtSuspend(void);
 
 
-/*
-  GRBL PRIMARY LOOP:
-*/
-void Protocol_MainLoop(void)
-{
+//--------------------
+//  GRBL PRIMARY LOOP:
+//--------------------
+void
+Protocol_MainLoop(void) {
 	// Perform some machine checks to make sure everything is good to go.
 #ifdef CHECK_LIMITS_AT_INIT
 	if(BIT_IS_TRUE(settings.flags, BITFLAG_HARD_LIMIT_ENABLE)) {
@@ -82,20 +82,20 @@ void Protocol_MainLoop(void)
 		Report_FeedbackMessage(MESSAGE_ALARM_LOCK);
 		sys.state = STATE_ALARM; // Ensure alarm state is set.
 	}
-	else {
-		// Check if the safety door is open.
+    else {// Check if the safety door is open.
 		sys.state = STATE_IDLE;
-		if(System_CheckSafetyDoorAjar()) {
+        if(System_CheckSafetyDoorAjar()) {// Returns if safety door is ajar(T) or closed(F)
 			BIT_TRUE(sys_rt_exec_state, EXEC_SAFETY_DOOR);
 			Protocol_ExecuteRealtime(); // Enter safety door mode. Should return as IDLE state.
 		}
 
 		// All systems go!
-		System_ExecuteStartup(line); // Execute startup script.
+        System_ExecuteStartup(line); // Execute startup script (if stored !!!).
 	}
 
 	// ---------------------------------------------------------------------------------
-	// Primary loop! Upon a system abort, this exits back to main() to reset the system.
+    // Primary loop!
+    // Upon a system abort, this exits back to main() to reset the system.
 	// This is also where Grbl idles while waiting for something to do.
 	// ---------------------------------------------------------------------------------
 	uint8_t line_flags = 0;
@@ -104,14 +104,13 @@ void Protocol_MainLoop(void)
 
 
 	for(;;) {
-		// Process one line of incoming serial data, as the data becomes available. Performs an
-		// initial filtering by removing spaces and comments and capitalizing all letters.
+        // Process one line of incoming serial data, as the data becomes available.
+        // Performs an initial filtering by removing spaces and comments and capitalizing all letters.
 		while(Getc(&c) == 0) {
 			if((c == '\n') || (c == '\r')) { // End of line reached
 				Protocol_ExecuteRealtime(); // Runtime command check point.
 
-				if(sys.abort) {
-					// Bail to calling function upon system abort
+                if(sys.abort) {// Bail to calling function upon system abort
 					return;
 				}
 
@@ -139,15 +138,17 @@ void Protocol_MainLoop(void)
 					Report_StatusMessage(STATUS_SYSTEM_GC_LOCK);
 				}
 				else {
+                    //-----------------------------------------
 					// Parse and execute g-code block.
 					Report_StatusMessage(GC_ExecuteLine(line));
+                    //-----------------------------------------
 				}
 
 				// Reset tracking data for next line.
 				line_flags = 0;
 				char_counter = 0;
+            }// if End of line reached
 
-			}
             else { // End of line not yet reached
 				if(line_flags) {
 					// Throw away all (except EOL) comment characters and overflow characters.
@@ -158,7 +159,7 @@ void Protocol_MainLoop(void)
 						}
 					}
 				}
-				else {
+                else {// line_flags not set
 					if(c <= ' ') {
                         // Throw away whitespace and control characters
 					}
@@ -179,7 +180,7 @@ void Protocol_MainLoop(void)
 						// TODO: Install '%' feature
 						// } else if (c == '%') {
 						// Program start-end percent sign NOT SUPPORTED.
-						// NOTE: This maybe installed to tell Grbl when a program is running vs manual input,
+                        // NOTE: This may be installed to tell Grbl when a program is running vs manual input,
 						// where, during a program, the system auto-cycle start will continue to execute
 						// everything until the next '%' sign. This will help fix resuming issues with certain
 						// functions that empty the planner buffer to execute its task on-time.
@@ -188,7 +189,7 @@ void Protocol_MainLoop(void)
 						// Detect line buffer overflow and set flag.
 						line_flags |= LINE_FLAG_OVERFLOW;
 					}
-					else if(c >= 'a' && c <= 'z') { // Upcase lowercase
+                    else if(c >= 'a' && c <= 'z') { // lowercase to Upcase
 						line[char_counter++] = c-'a'+'A';
 					}
 					else {
@@ -205,27 +206,25 @@ void Protocol_MainLoop(void)
 
 		Protocol_ExecuteRealtime();  // Runtime command check point.
 
-		if(sys.abort) {
-			// Bail to main() program loop to reset system.
+        if(sys.abort) {// Bail to main() program loop to reset system.
 			return;
 		}
     }// for(;;) {
 
     //return; /* Never reached */
-}
+}// Protocol_MainLoop()
 
 
 // Block until all buffered steps are executed or in a cycle state. Works with feed hold
 // during a synchronize call, if it should happen. Also, waits for clean cycle end.
-void Protocol_BufferSynchronize(void)
-{
+void
+Protocol_BufferSynchronize(void) {
 	// If system is queued, ensure cycle resumes if the auto start flag is present.
 	Protocol_AutoCycleStart();
 	do {
 		Protocol_ExecuteRealtime();   // Check and execute run-time commands
 
-		if(sys.abort) {
-			// Check for system abort
+        if(sys.abort) {// Check for system abort
 			return;
 		}
 	} while(Planner_GetCurrentBlock() || (sys.state == STATE_CYCLE));
@@ -238,8 +237,8 @@ void Protocol_BufferSynchronize(void)
 // when one of these conditions exist respectively: There are no more blocks sent (i.e. streaming
 // is finished, single commands), a command that needs to wait for the motions in the buffer to
 // execute calls a buffer sync, or the planner buffer is full and ready to go.
-void Protocol_AutoCycleStart(void)
-{
+void
+Protocol_AutoCycleStart(void) {
 	if(Planner_GetCurrentBlock() != 0) { // Check if there are any blocks in the buffer.
 		System_SetExecStateFlag(EXEC_CYCLE_START); // If so, execute them!
 	}
@@ -257,11 +256,11 @@ void Protocol_AutoCycleStart(void)
 // the same task, such as the planner recalculating the buffer upon a feedhold or overrides.
 // NOTE: The sys_rt_exec_state variable flags are set by any process, step or serial interrupts, pinouts,
 // limit switches, or the main program.
-void Protocol_ExecuteRealtime(void)
-{
+void
+Protocol_ExecuteRealtime(void) {
     RX_Packet_t packet;
 
-	Protocol_ExecRtSystem();
+    Protocol_ExecRtSystem();// Executes run-time commands
 
 #ifdef ETH_IF
     GrIP_Update();
@@ -286,8 +285,8 @@ void Protocol_ExecuteRealtime(void)
 // Executes run-time commands, when required. This function primarily operates as Grbl's state
 // machine and controls the various real-time features Grbl has to offer.
 // NOTE: Do not alter this unless you know exactly what you are doing!
-void Protocol_ExecRtSystem(void)
-{
+void
+Protocol_ExecRtSystem(void) {
 	uint8_t rt_exec; // Temp variable to avoid calling volatile multiple times.
 	rt_exec = sys_rt_exec_alarm; // Copy volatile sys_rt_exec_alarm.
 
@@ -316,7 +315,7 @@ void Protocol_ExecRtSystem(void)
 	}
 
     // Gabriele Salvato to silent a QtCreator warning
-    rt_exec = sys_rt_exec_state &0xFF; // Copy volatile sys_rt_exec_state.
+    rt_exec = sys_rt_exec_state & 0xFF; // Copy volatile sys_rt_exec_state.
 	if(rt_exec) {
 		// Execute system abort.
 		if(rt_exec & EXEC_RESET) {
@@ -650,7 +649,7 @@ void Protocol_ExecRtSystem(void)
 	if(sys.state & (STATE_CYCLE | STATE_HOLD | STATE_SAFETY_DOOR | STATE_HOMING | STATE_SLEEP| STATE_JOG)) {
 		Stepper_PrepareBuffer();
 	}
-}
+}// Protocol_ExecRtSystem(void){}
 
 
 // Handles Grbl system suspend procedures, such as feed hold, safety door, and parking motion.
@@ -658,8 +657,8 @@ void Protocol_ExecRtSystem(void)
 // whatever function that invoked the suspend, such that Grbl resumes normal operation.
 // This function is written in a way to promote custom parking motions. Simply use this as a
 // template
-static void Protocol_ExecRtSuspend(void)
-{
+static void
+Protocol_ExecRtSuspend(void) {
 #ifdef PARKING_ENABLE
     // Declare and initialize parking local variables
     float restore_target[N_AXIS];

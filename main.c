@@ -36,35 +36,37 @@
 
 // Declare system global variable structure
 System_t sys;
-int32_t sys_position[N_AXIS];      // Real-time machine (aka home) position vector in steps.
-int32_t sys_probe_position[N_AXIS]; // Last probe position in machine coordinates and steps.
-volatile uint8_t sys_probe_state;   // Probing state value.  Used to coordinate the probing cycle with stepper ISR.
-volatile uint16_t sys_rt_exec_state;   // Global realtime executor bitflag variable for state management. See EXEC bitmasks.
-volatile uint8_t sys_rt_exec_alarm;   // Global realtime executor bitflag variable for setting various alarms.
-volatile uint8_t sys_rt_exec_motion_override; // Global realtime executor bitflag variable for motion-based overrides.
+int32_t sys_position[N_AXIS];                    // Real-time machine (aka home) position vector in steps.
+int32_t sys_probe_position[N_AXIS];              // Last probe position in machine coordinates and steps.
+volatile uint8_t sys_probe_state;                // Probing state value.  Used to coordinate the probing cycle with stepper ISR.
+volatile uint16_t sys_rt_exec_state;             // Global realtime executor bitflag variable for state management. See EXEC bitmasks.
+volatile uint8_t sys_rt_exec_alarm;              // Global realtime executor bitflag variable for setting various alarms.
+volatile uint8_t sys_rt_exec_motion_override;    // Global realtime executor bitflag variable for motion-based overrides.
 volatile uint8_t sys_rt_exec_accessory_override; // Global realtime executor bitflag variable for spindle/coolant overrides.
+
 
 #ifdef ETH_IF
     uint8_t MAC[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
     // IP Address of tcp server
-    IPAddress_t IP = {{192, 168, 1, 20}};
-    IPAddress_t GatewayIP = {{192, 168, 1, 1}};
-    IPAddress_t SubnetMask = {{255, 255, 255, 0}};
-    IPAddress_t MyDns = {{8, 8, 8, 8}};
+    IPAddress_t IP         = {{192, 168,   1,  20}};
+    IPAddress_t GatewayIP  = {{192, 168,   1,   1}};
+    IPAddress_t SubnetMask = {{255, 255, 255,   0}};
+    IPAddress_t MyDns      = {{  8,   8,   8,   8}};
 #endif
 
 
-int main(void)
-{
+int
+main(void) {
 	// Init formatted output
-	Print_Init();
+    Print_Init();   // Usart_Init(STDOUT, BAUD_RATE);
 
-    System_Init();
-    Stepper_Init();
-    Settings_Init();
+    System_Init();  // GPIO_InitGPIO(GPIO_SYSTEM);
+    Stepper_Init(); // Configure step and direction interface pins & Timer9 (Used for Stepper Interrupt)
 
-    System_ResetPosition();
+    Settings_Init();// Initialize the config subsystem
+
+    System_ResetPosition();// Clear machine position.
 
 #ifdef ETH_IF
     // Initialize W5500
@@ -81,28 +83,25 @@ int main(void)
 	SysTick_Init();
 
 
-    if(BIT_IS_TRUE(settings.flags, BITFLAG_HOMING_ENABLE))
-    {
+    if(BIT_IS_TRUE(settings.flags, BITFLAG_HOMING_ENABLE)) {
 		sys.state = STATE_ALARM;
     }
-    else
-    {
+    else {
 		sys.state = STATE_IDLE;
     }
 
-	// Grbl-Advanced initialization loop upon power-up or a system abort. For the latter, all processes
-	// will return to this loop to be cleanly re-initialized.
-	while(1)
-    {
+    // Grbl-Advanced initialization loop upon power-up or a system abort.
+    // For the latter, all processes will return to this loop to be cleanly re-initialized.
+    while(1) {
 		// Reset system variables.
 		uint16_t prior_state = sys.state;
 		uint8_t home_state = sys.is_homed;
 
-		System_Clear();
+        System_Clear();// Clear sys struct variable
 		sys.state = prior_state;
 		sys.is_homed = home_state;
 
-		Probe_Reset();
+        Probe_Reset();// Clear probe position
 
 		sys_probe_state = 0;
 		sys_rt_exec_state = 0;
@@ -129,7 +128,8 @@ int main(void)
 		// Print welcome message. Indicates an initialization has occured at power-up or with a reset.
 		Report_InitMessage();
 
-		//-- Start Grbl-Advanced main loop. Processes program inputs and executes them. --//
+        //--------------------------------------------------------------------------------//
+        //-- Start Grbl-Advanced main loop. Processes program inputs and executes them. --//
         Protocol_MainLoop(); // In Protocol.c !
 		//--------------------------------------------------------------------------------//
 

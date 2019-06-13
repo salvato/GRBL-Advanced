@@ -1,5 +1,6 @@
 #include "eeprom.h"
 #include <string.h>
+#include "stm32f4xx_flash.h"
 
 
 static uint8_t EepromData[EEPROM_SIZE];
@@ -30,7 +31,7 @@ uint8_t EE_ReadByteArray(uint8_t *DataOut, uint16_t VirtAddress, uint16_t size)
         // well before I started working on this project.
         // The conclusion was that it shouldn't be touched because if a fix was put in,
         // everyone's EEPROM would automatically be wiped.
-		checksum = (checksum << 1) || (checksum >> 7);
+        checksum = (uint8_t)((checksum << 1) | (checksum >> 7));
 		checksum += data;
 		*(DataOut++) = data;
 	}
@@ -52,7 +53,7 @@ void EE_WriteByteArray(uint16_t VirtAddress, uint8_t *DataIn, uint16_t size)
         // well before I started working on this project.
         // The conclusion was that it shouldn't be touched because if a fix was put in,
         // everyone's EEPROM would automatically be wiped.
-        checksum = (checksum << 1) || (checksum >> 7);
+        checksum = (uint8_t)((checksum << 1) | (checksum >> 7));
 		checksum += *DataIn;
 		EE_WriteByte(VirtAddress++, *(DataIn++));
 	}

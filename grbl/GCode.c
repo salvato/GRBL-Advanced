@@ -60,11 +60,11 @@
 
 // Declare gc extern struct
 Parser_State_t gc_state;
-Parser_Block_t gc_block;
+static Parser_Block_t gc_block;
 
 
-void GC_Init(void)
-{
+void
+GC_Init(void) {
 	memset(&gc_state, 0, sizeof(Parser_State_t));
 
 	// Load default G54 coordinate system.
@@ -77,8 +77,8 @@ void GC_Init(void)
 
 // Sets g-code parser position in mm. Input in steps. Called by the system abort and hard
 // limit pull-off routines.
-void GC_SyncPosition(void)
-{
+void
+GC_SyncPosition(void) {
 	System_ConvertArraySteps2Mpos(gc_state.position, sys_position);
 }
 
@@ -88,11 +88,11 @@ void GC_SyncPosition(void)
 // characters have been removed. In this function, all units and positions are converted and
 // exported to grbl's internal functions in terms of (mm, mm/min) and absolute machine
 // coordinates, respectively.
-uint8_t GC_ExecuteLine(char *line)
-{
+uint8_t
+GC_ExecuteLine(char *line) {
 	/* -------------------------------------------------------------------------------------
      STEP 1: Initialize parser block struct and copy current g-code state modes. The parser
-     updates these modes and commands as the block line is parser and will only be used and
+     updates these modes and commands as the block line is parsed and will only be used and
      executed after successful error-checking. The parser block struct also contains a block
      values struct, word tracking variables, and a non-modal commands tracker for the new
      block. This struct contains all of the necessary information to execute the block. */
@@ -140,28 +140,23 @@ uint8_t GC_ExecuteLine(char *line)
 
 	memcpy(old_xyz, gc_state.position, N_AXIS*sizeof(float));
 
-	if(gc_parser_flags & GC_PARSER_JOG_MOTION)
-    {
+    if(gc_parser_flags & GC_PARSER_JOG_MOTION) {
 		// Start parsing after `$J=`
 		char_counter = 3;
 	}
-	else
-	{
+    else {
 		char_counter = 0;
 	}
 
-	while(line[char_counter] != 0)  // Loop until no more g-code words in line.
-    {
+    while(line[char_counter] != 0) { // Loop until no more g-code words in line.
         // Import the next g-code word, expecting a letter followed by a value. Otherwise, error out.
 		letter = line[char_counter];
-		if((letter < 'A') || (letter > 'Z'))
-        {
+        if((letter < 'A') || (letter > 'Z')) {
 			return STATUS_EXPECTED_COMMAND_LETTER;
 		} // [Expected word letter]
 
 		char_counter++;
-		if(!Read_Float(line, &char_counter, &value))
-        {
+        if(!Read_Float(line, &char_counter, &value)) {
 			return STATUS_BAD_NUMBER_FORMAT;
 		} // [Expected word value]
 
@@ -172,8 +167,8 @@ uint8_t GC_ExecuteLine(char *line)
 		// a good enough comprimise and catch most all non-integer errors. To make it compliant,
 		// we would simply need to change the mantissa to int16, but this add compiled flash space.
 		// Maybe update this later.
-		int_value = trunc(value);
-		mantissa =  round(100*(value - int_value)); // Compute mantissa for Gxx.x commands.
+        int_value = (uint8_t)(truncf(value));
+        mantissa =  (uint16_t)(roundf(100*(value - int_value))); // Compute mantissa for Gxx.x commands.
 		// NOTE: Rounding must be used to catch small floating point errors.
 
 		// Check if the g-code word is supported or errors due to modal group violations or has
@@ -471,7 +466,7 @@ uint8_t GC_ExecuteLine(char *line)
 			case 'J': word_bit = WORD_J; gc_block.values.ijk[Y_AXIS] = value; ijk_words |= (1<<Y_AXIS); break;
 			case 'K': word_bit = WORD_K; gc_block.values.ijk[Z_AXIS] = value; ijk_words |= (1<<Z_AXIS); break;
 			case 'L': word_bit = WORD_L; gc_block.values.l = int_value; break;
-			case 'N': word_bit = WORD_N; gc_block.values.n = trunc(value); break;
+            case 'N': word_bit = WORD_N; gc_block.values.n = (int)(truncf(value)); break;
 			case 'P': word_bit = WORD_P; gc_block.values.p = value; break;
 			// NOTE: For certain commands, P value must be an integer, but none of these commands are supported.
 			case 'Q': word_bit = WORD_Q; gc_block.values.q = value; break;
@@ -502,7 +497,7 @@ uint8_t GC_ExecuteLine(char *line)
 			// NOTE: Negative value check is done here simply for code-efficiency.
 			if(BIT(word_bit) & (BIT(WORD_F)|BIT(WORD_N)|BIT(WORD_P)|BIT(WORD_T)|BIT(WORD_S)))
             {
-				if(value < 0.0)
+                if(value < 0.0f)
 				{
 					// [Word value cannot be negative]
 					return STATUS_NEGATIVE_VALUE;
@@ -588,7 +583,7 @@ uint8_t GC_ExecuteLine(char *line)
 
 		if(gc_block.modal.units == UNITS_MODE_INCHES)
         {
-			gc_block.values.f *= MM_PER_INCH;
+            gc_block.values.f *= MM_PER_INCH;
 		}
 	}
 	else
@@ -625,7 +620,7 @@ uint8_t GC_ExecuteLine(char *line)
                 {
 					if(gc_block.modal.units == UNITS_MODE_INCHES)
                     {
-						gc_block.values.f *= MM_PER_INCH;
+                        gc_block.values.f *= MM_PER_INCH;
 					}
 				}
 				else
@@ -736,7 +731,7 @@ uint8_t GC_ExecuteLine(char *line)
 		for(idx = 0; idx < N_AXIS; idx++) { // Axes indices are consistent, so loop may be used.
 			if(BIT_IS_TRUE(axis_words, BIT(idx)))
 			{
-				gc_block.values.xyz[idx] *= MM_PER_INCH;
+                gc_block.values.xyz[idx] *= MM_PER_INCH;
 			}
 		}
 	}
@@ -811,7 +806,7 @@ uint8_t GC_ExecuteLine(char *line)
 			return STATUS_GCODE_VALUE_WORD_MISSING;
 		}
 
-		coord_select = trunc(gc_block.values.p); // Convert p value to int.
+        coord_select = (uint8_t)(truncf(gc_block.values.p)); // Convert p value to int.
 		if(coord_select > N_COORDINATE_SYSTEM)
         {
 			// [Greater than N sys]
@@ -1036,7 +1031,7 @@ uint8_t GC_ExecuteLine(char *line)
 		else
         {
 			// Check if feed rate is defined for the motion modes that require it.
-			if(gc_block.values.f == 0.0)
+            if(gc_block.values.f == 0.0f)
 			{
 				// [Feed rate undefined]
 				return STATUS_GCODE_UNDEFINED_FEED_RATE;
@@ -1092,7 +1087,7 @@ uint8_t GC_ExecuteLine(char *line)
 					// Convert radius value to proper units.
 					if(gc_block.modal.units == UNITS_MODE_INCHES)
                     {
-						gc_block.values.r *= MM_PER_INCH;
+                        gc_block.values.r *= MM_PER_INCH;
 					}
 					/*  We need to calculate the center of the circle that has the designated radius and passes
 					through both the current position and the target position. This method calculates the following
@@ -1144,7 +1139,7 @@ uint8_t GC_ExecuteLine(char *line)
 
 					// First, use h_x2_div_d to compute 4*h^2 to check if it is negative or r is smaller
 					// than d. If so, the sqrt of a negative number is complex and error out.
-					float h_x2_div_d = 4.0 * gc_block.values.r*gc_block.values.r - x*x - y*y;
+                    float h_x2_div_d = 4.0f * gc_block.values.r*gc_block.values.r - x*x - y*y;
 
 					if(h_x2_div_d < 0)
                     {
@@ -1153,7 +1148,7 @@ uint8_t GC_ExecuteLine(char *line)
 					}
 
 					// Finish computing h_x2_div_d.
-					h_x2_div_d = -sqrt(h_x2_div_d)/hypot_f(x,y); // == -(h * 2 / d)
+                    h_x2_div_d = -sqrtf(h_x2_div_d)/hypot_f(x,y); // == -(h * 2 / d)
 					// Invert the sign of h_x2_div_d if the circle is counter clockwise (see sketch below)
 					if(gc_block.modal.motion == MOTION_MODE_CCW_ARC)
                     {
@@ -1186,8 +1181,8 @@ uint8_t GC_ExecuteLine(char *line)
 					}
 
 					// Complete the operation by calculating the actual center of the arc
-					gc_block.values.ijk[axis_0] = 0.5*(x-(y*h_x2_div_d));
-					gc_block.values.ijk[axis_1] = 0.5*(y+(x*h_x2_div_d));
+                    gc_block.values.ijk[axis_0] = 0.5f*(x-(y*h_x2_div_d));
+                    gc_block.values.ijk[axis_1] = 0.5f*(y+(x*h_x2_div_d));
 
 					}
 					else { // Arc Center Format Offset Mode
@@ -1201,7 +1196,7 @@ uint8_t GC_ExecuteLine(char *line)
 						if(gc_block.modal.units == UNITS_MODE_INCHES) {
 							for(idx = 0; idx < N_AXIS; idx++) { // Axes indices are consistent, so loop may be used to save flash space.
 								if(ijk_words & BIT(idx)) {
-									gc_block.values.ijk[idx] *= MM_PER_INCH;
+                                    gc_block.values.ijk[idx] *= MM_PER_INCH;
 								}
 							}
 						}
@@ -1216,13 +1211,13 @@ uint8_t GC_ExecuteLine(char *line)
 						gc_block.values.r = hypot_f(gc_block.values.ijk[axis_0], gc_block.values.ijk[axis_1]);
 
 						// Compute difference between current location and target radii for final error-checks.
-						float delta_r = fabs(target_r-gc_block.values.r);
-						if(delta_r > 0.005) {
-							if(delta_r > 0.5) {
+                        float delta_r = fabsf(target_r-gc_block.values.r);
+                        if(delta_r > 0.005f) {
+                            if(delta_r > 0.5f) {
 								// [Arc definition error] > 0.5mm
 								return STATUS_GCODE_INVALID_TARGET;
 							}
-							if(delta_r > (0.001*gc_block.values.r)) {
+                            if(delta_r > (0.001f*gc_block.values.r)) {
 								// [Arc definition error] > 0.005mm AND 0.1% radius
 								return STATUS_GCODE_INVALID_TARGET;
 							}
@@ -1660,7 +1655,7 @@ uint8_t GC_ExecuteLine(char *line)
                     else
                     {
                         //-- G83 --//
-                        for(float curr_z = clear_z - gc_block.values.q; curr_z >= gc_block.values.xyz[Z_AXIS] - 0.001; curr_z -= gc_block.values.q)
+                        for(float curr_z = clear_z - gc_block.values.q; curr_z >= gc_block.values.xyz[Z_AXIS] - 0.001f; curr_z -= gc_block.values.q)
                         {
                             // Check if target depth exceeds final depth
                             if(curr_z < gc_block.values.xyz[Z_AXIS])
@@ -1679,7 +1674,7 @@ uint8_t GC_ExecuteLine(char *line)
                             MC_Line(xyz, pl_data);
 
                             // Rapid move to bottom of hole (backed off a bit)
-                            xyz[Z_AXIS] = curr_z + 0.4;
+                            xyz[Z_AXIS] = curr_z + 0.4f;
                             pl_data->condition |= PL_COND_FLAG_RAPID_MOTION; // Set rapid motion condition flag.
                             MC_Line(xyz, pl_data);
                         }
