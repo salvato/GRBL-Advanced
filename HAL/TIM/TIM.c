@@ -16,8 +16,10 @@
   along with STM32F4_HAL.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "stm32f4xx_tim.h"
+#include "stm32f4xx_rcc.h"
 #include "stm32f4xx_gpio.h"
 #include "TIM.h"
+#include "misc.h"
 
 
 /**
@@ -25,8 +27,8 @@
  * Outputs ~10 KHz on D11
  * Used for Variable Spindle PWM
  **/
-void TIM1_Init(void)
-{
+void
+TIM1_Init(void) {
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 	TIM_OCInitTypeDef TIM_OCInitStructure;
 
@@ -66,8 +68,8 @@ void TIM1_Init(void)
  * On CC1, Main Stepper Interuppt is called
  * On Update, Stepper Port Reset is called
  **/
-void TIM9_Init(void)
-{
+void
+TIM9_Init(void) {
 	NVIC_InitTypeDef NVIC_InitStructure;
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 	TIM_OCInitTypeDef TIM_OCInitStructure;

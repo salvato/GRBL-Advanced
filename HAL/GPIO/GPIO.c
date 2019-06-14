@@ -70,8 +70,8 @@ void GPIO_InitGPIO(char gpio)
 }
 
 
-static void GPIO_InitStepper(void)
-{
+static void
+GPIO_InitStepper(void) {
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	/* GPIO Configuration: D13, D12, D11, D7, D8, D2 */
@@ -87,8 +87,9 @@ static void GPIO_InitStepper(void)
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
 
-static void GPIO_InitProbe(void)
-{
+
+static void
+GPIO_InitProbe(void) {
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
@@ -99,8 +100,9 @@ static void GPIO_InitProbe(void)
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
-static void GPIO_InitSpindle(void)
-{
+
+static void
+GPIO_InitSpindle(void) {
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	/* GPIO Configuration:  */

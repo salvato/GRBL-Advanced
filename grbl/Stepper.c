@@ -35,7 +35,7 @@
 
 
 // Some useful constants.
-#define DT_SEGMENT						(1.0/(ACCELERATION_TICKS_PER_SECOND*60.0)) // min/segment
+#define DT_SEGMENT						(1.0f/(ACCELERATION_TICKS_PER_SECOND*60.0f)) // min/segment
 #define REQ_MM_INCREMENT_SCALAR 		1.25
 #define RAMP_ACCEL						0
 #define RAMP_CRUISE						1
@@ -215,11 +215,10 @@ static Stepper_PrepData_t prep;
 
 
 // Initialize and start the stepper motor subsystem
-void Stepper_Init(void)
-{
+void
+Stepper_Init(void) {
 	// Configure step and direction interface pins
 	GPIO_InitGPIO(GPIO_STEPPER);
-
 	// Init TIM9
 	TIM9_Init();
 }
@@ -227,8 +226,8 @@ void Stepper_Init(void)
 
 // Stepper state initialization. Cycle should only start if the st.cycle_start flag is
 // enabled. Startup init and limits call this function but shouldn't start the cycle.
-void Stepper_WakeUp(void)
-{
+void
+Stepper_WakeUp(void) {
 	// Enable stepper drivers.
 	if(BIT_IS_TRUE(settings.flags, BITFLAG_INVERT_ST_ENABLE)) {
 		GPIO_SetBits(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
@@ -250,8 +249,8 @@ void Stepper_WakeUp(void)
 
 
 // Stepper shutdown
-void Stepper_Disable(uint8_t ovr_disable)
-{
+void
+Stepper_Disable(uint8_t ovr_disable) {
 	// Disable Stepper Driver Interrupt.
 	TIM_Cmd(TIM9, DISABLE);
 	Delay_us(1);
@@ -269,8 +268,7 @@ void Stepper_Disable(uint8_t ovr_disable)
 		pin_state = true; // Override. Disable steppers.
 	}
 
-	if(ovr_disable)
-    {
+    if(ovr_disable) {
         // Disable
         pin_state = true;
     }
@@ -333,8 +331,8 @@ void Stepper_Disable(uint8_t ovr_disable)
    ISR is 5usec typical and 25usec maximum, well below requirement.
    NOTE: This ISR expects at least one step to be executed per segment.
 */
-void Stepper_MainISR(void)
-{
+void
+Stepper_MainISR(void) {
     if(st.step_outbits & (1<<X_STEP_BIT)) {
 		if(step_port_invert_mask & (1<<X_STEP_BIT)) {
 			// Low pulse
@@ -440,7 +438,6 @@ void Stepper_MainISR(void)
 		}
 	}
 
-
 	// Check probing state.
 	if(sys_probe_state == PROBE_ACTIVE) {
 		Probe_StateMonitor();
@@ -456,8 +453,7 @@ void Stepper_MainISR(void)
 		st.step_outbits |= (1<<X_STEP_BIT);
 		st.counter_x -= st.exec_block->step_event_count;
 
-        if(st.exec_segment->backlash_motion == 0)
-        {
+        if(st.exec_segment->backlash_motion == 0) {
             if(st.exec_block->direction_bits & (1<<X_DIRECTION_BIT)) {
                 sys_position[X_AXIS]--;
             }
@@ -473,8 +469,7 @@ void Stepper_MainISR(void)
 		st.step_outbits |= (1<<Y_STEP_BIT);
 		st.counter_y -= st.exec_block->step_event_count;
 
-        if(st.exec_segment->backlash_motion == 0)
-        {
+        if(st.exec_segment->backlash_motion == 0) {
             if(st.exec_block->direction_bits & (1<<Y_DIRECTION_BIT)) {
                 sys_position[Y_AXIS]--;
             }
@@ -490,8 +485,7 @@ void Stepper_MainISR(void)
 		st.step_outbits |= (1<<Z_STEP_BIT);
 		st.counter_z -= st.exec_block->step_event_count;
 
-        if(st.exec_segment->backlash_motion == 0)
-        {
+        if(st.exec_segment->backlash_motion == 0) {
             if(st.exec_block->direction_bits & (1<<Z_DIRECTION_BIT)) {
                 sys_position[Z_AXIS]--;
             }
@@ -525,8 +519,8 @@ void Stepper_MainISR(void)
    cause issues at high step rates if another high frequency asynchronous interrupt is
    added to Grbl.
 */
-void Stepper_PortResetISR(void)
-{
+void
+Stepper_PortResetISR(void) {
 	// Reset stepping pins (leave the direction pins)
 
 	// X
@@ -556,8 +550,8 @@ void Stepper_PortResetISR(void)
 
 
 // Generates the step and direction port invert masks used in the Stepper Interrupt Driver.
-void Stepper_GenerateStepDirInvertMasks(void)
-{
+void
+Stepper_GenerateStepDirInvertMasks(void) {
 	uint8_t idx;
 
 	step_port_invert_mask = 0;
@@ -576,8 +570,8 @@ void Stepper_GenerateStepDirInvertMasks(void)
 
 
 // Reset and clear stepper subsystem variables
-void Stepper_Reset(void)
-{
+void
+Stepper_Reset(void) {
 	// Initialize stepper driver idle state.
 	Stepper_Disable(0);
 
@@ -609,8 +603,8 @@ void Stepper_Reset(void)
 
 
 // Called by planner_recalculate() when the executing block is updated by the new plan.
-void Stepper_UpdatePlannerBlockParams(void)
-{
+void
+Stepper_UpdatePlannerBlockParams(void) {
 	if(pl_block != 0) { // Ignore if at start of a new block.
 		prep.recalculate_flag |= PREP_FLAG_RECALCULATE;
 		pl_block->entry_speed_sqr = prep.current_speed*prep.current_speed; // Update entry speed.
@@ -620,8 +614,8 @@ void Stepper_UpdatePlannerBlockParams(void)
 
 
 // Increments the step segment buffer block data ring buffer.
-static uint8_t Stepper_NextBlockIndex(uint8_t block_index)
-{
+static uint8_t
+Stepper_NextBlockIndex(uint8_t block_index) {
 	block_index++;
 
 	if(block_index == (SEGMENT_BUFFER_SIZE-1)) {
@@ -634,8 +628,8 @@ static uint8_t Stepper_NextBlockIndex(uint8_t block_index)
 
 #ifdef PARKING_ENABLE
 // Changes the run state of the step segment buffer to execute the special parking motion.
-void Stepper_ParkingSetupBuffer()
-{
+void
+Stepper_ParkingSetupBuffer() {
     // Store step execution data of partially completed block, if necessary.
     if(prep.recalculate_flag & PREP_FLAG_HOLD_PARTIAL_BLOCK) {
 		prep.last_st_block_index = prep.st_block_index;
@@ -651,8 +645,8 @@ void Stepper_ParkingSetupBuffer()
 
 
 // Restores the step segment buffer to the normal run state after a parking motion.
-void Stepper_ParkingRestoreBuffer()
-{
+void
+Stepper_ParkingRestoreBuffer() {
     // Restore step execution data and flags of partially completed block, if necessary.
     if(prep.recalculate_flag & PREP_FLAG_HOLD_PARTIAL_BLOCK) {
 		st_prep_block = &st_block_buffer[prep.last_st_block_index];
@@ -685,8 +679,8 @@ void Stepper_ParkingRestoreBuffer()
    Currently, the segment buffer conservatively holds roughly up to 40-50 msec of steps.
    NOTE: Computation units are in steps, millimeters, and minutes.
 */
-void Stepper_PrepareBuffer(void)
-{
+void
+Stepper_PrepareBuffer(void) {
 	// Block step prep buffer, while in a suspend state and there is no suspend motion to execute.
 	if(BIT_IS_TRUE(sys.step_control,STEP_CONTROL_END_MOTION)) {
 		return;
@@ -776,7 +770,7 @@ void Stepper_PrepareBuffer(void)
 			planner has updated it. For a commanded forced-deceleration, such as from a feed
 			hold, override the planner velocities and decelerate to the target exit speed.
 			*/
-			prep.mm_complete = 0.0; // Default velocity profile complete at 0.0mm from end of block.
+            prep.mm_complete = 0.0f; // Default velocity profile complete at 0.0mm from end of block.
             float inv_2_accel = 0.5f/pl_block->acceleration;
 
 			if(sys.step_control & STEP_CONTROL_EXECUTE_HOLD) { // [Forced Deceleration to Zero Velocity]
@@ -792,7 +786,7 @@ void Stepper_PrepareBuffer(void)
 				}
 				else {
 					prep.mm_complete = decel_dist; // End of feed hold.
-					prep.exit_speed = 0.0;
+                    prep.exit_speed = 0.0f;
 				}
 			}
 			else { // [Normal Operation]
@@ -1045,7 +1039,7 @@ void Stepper_PrepareBuffer(void)
 		float step_dist_remaining = prep.step_per_mm*mm_remaining; // Convert mm_remaining to steps
         float n_steps_remaining = ceilf(step_dist_remaining); // Round-up current steps remaining
         float last_n_steps_remaining = ceilf(prep.steps_remaining); // Round-up last steps remaining
-		prep_segment->n_step = last_n_steps_remaining-n_steps_remaining; // Compute number of steps to execute.
+        prep_segment->n_step = (uint16_t)(last_n_steps_remaining-n_steps_remaining); // Compute number of steps to execute.
 
 		// Bail if we are at the end of a feed hold and don't have a step to execute.
 		if(prep_segment->n_step == 0) {
@@ -1075,7 +1069,7 @@ void Stepper_PrepareBuffer(void)
 		float inv_rate = dt/(last_n_steps_remaining - step_dist_remaining); // Compute adjusted step rate inverse
 
 		// Compute CPU cycles per step for the prepped segment.
-        uint32_t cycles = ceil((TICKS_PER_MICROSECOND*1000000*60)*inv_rate); // (cycles/step)
+        uint32_t cycles = (uint32_t)(ceilf((TICKS_PER_MICROSECOND*1000000*60)*inv_rate)); // (cycles/step)
 
 		// Compute step timing and multi-axis smoothing level.
 		// NOTE: AMASS overdrives the timer with each level, so only one prescalar is required.
@@ -1099,7 +1093,7 @@ void Stepper_PrepareBuffer(void)
 
 		if(cycles < (1UL << 16)) {
 			// < 65536 (2.7ms @ 24MHz)
-			prep_segment->cycles_per_tick = cycles;
+            prep_segment->cycles_per_tick = (uint16_t)(cycles);
 		}
 		else {
 			// Just set the slowest speed possible.
@@ -1152,8 +1146,8 @@ void Stepper_PrepareBuffer(void)
 // however is not exactly the current speed, but the speed computed in the last step segment
 // in the segment buffer. It will always be behind by up to the number of segment blocks (-1)
 // divided by the ACCELERATION TICKS PER SECOND in seconds.
-float Stepper_GetRealtimeRate(void)
-{
+float
+Stepper_GetRealtimeRate(void) {
 	if(sys.state & (STATE_CYCLE | STATE_HOMING | STATE_HOLD | STATE_JOG | STATE_SAFETY_DOOR)) {
 		return prep.current_speed;
 	}

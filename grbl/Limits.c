@@ -35,15 +35,15 @@
 
 // Homing axis search distance multiplier. Computed by this value times the cycle travel.
 #ifndef HOMING_AXIS_SEARCH_SCALAR
-  #define HOMING_AXIS_SEARCH_SCALAR  1.5 // Must be > 1 to ensure limit switch will be engaged.
+  #define HOMING_AXIS_SEARCH_SCALAR  1.5f // Must be > 1 to ensure limit switch will be engaged.
 #endif
 #ifndef HOMING_AXIS_LOCATE_SCALAR
-  #define HOMING_AXIS_LOCATE_SCALAR  5.0 // Must be > 1 to ensure limit switch is cleared.
+  #define HOMING_AXIS_LOCATE_SCALAR  5.0f // Must be > 1 to ensure limit switch is cleared.
 #endif
 
 
-void Limits_Init(void)
-{
+void
+Limits_Init(void) {
 	GPIO_InitGPIO(GPIO_LIMIT);
 
 	// TODO: Hard limits via interrupt
@@ -57,8 +57,8 @@ void Limits_Init(void)
 
 
 // Disables hard limits.
-void Limits_Disable(void)
-{
+void
+Limits_Disable(void) {
 	settings.system_flags &= ~BITFLAG_ENABLE_LIMITS;
 }
 
@@ -66,11 +66,11 @@ void Limits_Disable(void)
 // Returns limit state as a bit-wise uint8 variable. Each bit indicates an axis limit, where
 // triggered is 1 and not triggered is 0. Invert mask is applied. Axes are defined by their
 // number in bit position, i.e. Z_AXIS is (1<<2) or bit 2, and Y_AXIS is (1<<1) or bit 1.
-uint8_t Limits_GetState(void)
-{
+uint8_t
+Limits_GetState(void) {
 	uint8_t limit_state = 0;
 
-	limit_state = (GPIO_ReadInputDataBit(GPIO_LIM_X_PORT, GPIO_LIM_X_PIN)<<X_LIMIT_BIT);
+    limit_state = (uint8_t)(GPIO_ReadInputDataBit(GPIO_LIM_X_PORT, GPIO_LIM_X_PIN)<<X_LIMIT_BIT);
 	limit_state |= (GPIO_ReadInputDataBit(GPIO_LIM_Y_PORT, GPIO_LIM_Y_PIN)<<Y_LIMIT_BIT);
 	limit_state |= (GPIO_ReadInputDataBit(GPIO_LIM_Z_PORT, GPIO_LIM_Z_PIN)<<Z_LIMIT_BIT);
 
@@ -93,8 +93,8 @@ uint8_t Limits_GetState(void)
 // homing cycles and will not respond correctly. Upon user request or need, there may be a
 // special pinout for an e-stop, but it is generally recommended to just directly connect
 // your e-stop switch to the Arduino reset pin, since it is the most correct way to do this.
-void Limit_PinChangeISR(void) // DEFAULT: Limit pin change interrupt process.
-{
+void
+Limit_PinChangeISR(void) { // DEFAULT: Limit pin change interrupt process.
     // Ignore limit switches if already in an alarm state or in-process of executing an alarm.
     // When in the alarm state, Grbl should have been reset or will force a reset, so any pending
     // moves in the planner and serial buffers are all cleared and newly sent blocks will be
@@ -125,8 +125,8 @@ void Limit_PinChangeISR(void) // DEFAULT: Limit pin change interrupt process.
 // circumvent the processes for executing motions in normal operation.
 // NOTE: Only the abort realtime command can interrupt this process.
 // TODO: Move limit pin-specific calls to a general function for portability.
-void Limits_GoHome(uint8_t cycle_mask)
-{
+void
+Limits_GoHome(uint8_t cycle_mask) {
 	if(sys.abort) {
 		// Block if system reset has been issued.
 		return;
@@ -158,7 +158,7 @@ void Limits_GoHome(uint8_t cycle_mask)
 		if(BIT_IS_TRUE(cycle_mask, BIT(idx))) {
 			// Set target based on max_travel setting. Ensure homing switches engaged with search scalar.
 			// NOTE: settings.max_travel[] is stored as a negative value.
-			max_travel = max(max_travel, (-HOMING_AXIS_SEARCH_SCALAR)*settings.max_travel[idx]);
+            max_travel = max(max_travel, (-HOMING_AXIS_SEARCH_SCALAR)*settings.max_travel[idx]);
 		}
 	}
 
@@ -213,7 +213,7 @@ void Limits_GoHome(uint8_t cycle_mask)
 
 		}
 
-		homing_rate *= sqrt(n_active_axis); // [sqrt(N_AXIS)] Adjust so individual axes all move at homing rate.
+        homing_rate *= sqrtf(n_active_axis); // [sqrt(N_AXIS)] Adjust so individual axes all move at homing rate.
 		sys.homing_axis_lock = axislock;
 
 		// Perform homing cycle. Planner buffer should be empty, as required to initiate the homing cycle.
@@ -357,8 +357,8 @@ void Limits_GoHome(uint8_t cycle_mask)
 // Performs a soft limit check. Called from mc_line() only. Assumes the machine has been homed,
 // the workspace volume is in all negative space, and the system is in normal operation.
 // NOTE: Used by jogging to limit travel within soft-limit volume.
-void Limits_SoftCheck(float *target)
-{
+void
+Limits_SoftCheck(float *target) {
 	if(System_CheckTravelLimits(target)) {
 		sys.soft_limit = true;
 

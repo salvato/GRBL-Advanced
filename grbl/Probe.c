@@ -30,16 +30,16 @@ static uint8_t probe_invert_mask;
 
 
 // Probe pin initialization routine.
-void Probe_Init(void)
-{
+void
+Probe_Init(void) {
 	GPIO_InitGPIO(GPIO_PROBE);
 
 	Probe_ConfigureInvertMask(false); // Initialize invert mask.*/
 }
 
 
-void Probe_Reset(void)
-{
+void
+Probe_Reset(void) {
 	// Clear probe position.
 	memset(sys_probe_position, 0 , sizeof(sys_probe_position));
 }
@@ -48,8 +48,8 @@ void Probe_Reset(void)
 // Called by probe_init() and the mc_probe() routines. Sets up the probe pin invert mask to
 // appropriately set the pin logic according to setting for normal-high/normal-low operation
 // and the probing cycle modes for toward-workpiece/away-from-workpiece.
-void Probe_ConfigureInvertMask(uint8_t is_probe_away)
-{
+void
+Probe_ConfigureInvertMask(uint8_t is_probe_away) {
 	probe_invert_mask = 0; // Initialize as zero.
 
 	if(BIT_IS_FALSE(settings.flags, BITFLAG_INVERT_PROBE_PIN)) {
@@ -62,7 +62,8 @@ void Probe_ConfigureInvertMask(uint8_t is_probe_away)
 
 
 // Returns the probe pin state. Triggered = true. Called by gcode parser and probe state monitor.
-uint8_t Probe_GetState(void) {
+uint8_t
+Probe_GetState(void) {
 	return (GPIO_ReadInputDataBit(GPIO_PROBE_PORT, GPIO_PROBE_PIN) ^ probe_invert_mask);
 }
 
@@ -70,8 +71,8 @@ uint8_t Probe_GetState(void) {
 // Monitors probe pin state and records the system position when detected. Called by the
 // stepper ISR per ISR tick.
 // NOTE: This function must be extremely efficient as to not bog down the stepper ISR.
-void Probe_StateMonitor(void)
-{
+void
+Probe_StateMonitor(void) {
 	if(Probe_GetState()) {
 		sys_probe_state = PROBE_OFF;
 		memcpy(sys_probe_position, sys_position, sizeof(sys_position));
