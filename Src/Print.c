@@ -18,29 +18,27 @@ static char buf[512] = {0};
 static uint16_t buf_idx = 0;
 
 
-void Print_Init(void)
-{
+void
+Print_Init(void) {
 	Usart_Init(STDOUT, BAUD_RATE);
 }
 
 
-int Printf(const char *str, ...)
-{
+int
+Printf(const char *str, ...) {
 	char buffer[MAX_BUFFER_SIZE];
 	uint8_t idx = 0;
 
 	va_list vl;
 	va_start(vl, str);
-	int i = vsnprintf(buffer, MAX_BUFFER_SIZE, str, vl);
+    int i = vsnprintf(buffer, MAX_BUFFER_SIZE, str, vl);
 
-	if(i > MAX_BUFFER_SIZE)
-    {
+    if(i > MAX_BUFFER_SIZE) {
         i = MAX_BUFFER_SIZE;
     }
 
 
-    for(uint8_t j = 0; j < i; j++)
-    {
+    for(uint8_t j = 0; j < i; j++) {
         buf[buf_idx++] = buffer[j];
     }
     //Usart_Write(STDOUT, false, buffer, i);
@@ -52,8 +50,8 @@ int Printf(const char *str, ...)
 }
 
 
-int8_t Getc(char *c)
-{
+int8_t
+Getc(char *c) {
 	if(FifoUsart_Get(STDOUT_NUM, USART_DIR_RX, c) == 0) {
 		return 0;
 	}
@@ -62,8 +60,8 @@ int8_t Getc(char *c)
 }
 
 
-int Putc(const char c)
-{
+int
+Putc(const char c) {
     buf[buf_idx++] = c;
     //Usart_Put(STDOUT, false, c);
 
@@ -71,8 +69,8 @@ int Putc(const char c)
 }
 
 
-void Print_Flush(void)
-{
+void
+Print_Flush(void) {
 #ifdef ETH_IF
     Pdu_t data;
 
@@ -82,7 +80,7 @@ void Print_Flush(void)
     uint8_t ret = GrIP_Transmit(MSG_DATA_NO_RESPONSE, 0, &data);
     (void)ret;  // TODO: Handle transmit error
 #else
-    Usart_Write(STDOUT, false, buf, buf_idx);
+    Usart_Write(STDOUT, false, buf, (uint8_t)buf_idx);
 #endif
 
     memset(buf, 0, 512);
@@ -95,8 +93,8 @@ void Print_Flush(void)
 // may be set by the user. The integer is then efficiently converted to a string.
 // NOTE: AVR '%' and '/' integer operations are very efficient. Bitshifting speed-up
 // techniques are actually just slightly slower. Found this out the hard way.
-void PrintFloat(float n, uint8_t decimal_places)
-{
+void
+PrintFloat(float n, uint8_t decimal_places) {
 	if(n < 0) {
 		Putc('-');
 		n = -n;
@@ -146,8 +144,8 @@ void PrintFloat(float n, uint8_t decimal_places)
 // in the config.h.
 //  - CoordValue: Handles all position or coordinate values in inches or mm reporting.
 //  - RateValue: Handles feed rate and current velocity in inches or mm reporting.
-void PrintFloat_CoordValue(float n)
-{
+void
+PrintFloat_CoordValue(float n) {
 	if(BIT_IS_TRUE(settings.flags, BITFLAG_REPORT_INCHES)) {
 		PrintFloat(n*INCH_PER_MM,N_DECIMAL_COORDVALUE_INCH);
 	}
@@ -157,8 +155,8 @@ void PrintFloat_CoordValue(float n)
 }
 
 
-void PrintFloat_RateValue(float n)
-{
+void
+PrintFloat_RateValue(float n) {
 	if(BIT_IS_TRUE(settings.flags, BITFLAG_REPORT_INCHES)) {
 		PrintFloat(n*INCH_PER_MM,N_DECIMAL_RATEVALUE_INCH);
 	}
