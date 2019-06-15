@@ -82,7 +82,6 @@ main(void) {
     // Init SysTick 1ms
 	SysTick_Init();
 
-
     if(BIT_IS_TRUE(settings.flags, BITFLAG_HOMING_ENABLE)) {
 		sys.state = STATE_ALARM;
     }
@@ -101,13 +100,13 @@ main(void) {
 		sys.state = prior_state;
 		sys.is_homed = home_state;
 
-        Probe_Reset();// Clear probe position
+        Probe_Reset();// Clear probe position structure
 
-		sys_probe_state = 0;
-		sys_rt_exec_state = 0;
-		sys_rt_exec_alarm = 0;
-		sys_rt_exec_motion_override = 0;
-		sys_rt_exec_accessory_override = 0;
+        sys_probe_state = 0;// Used to coordinate the probing cycle with stepper ISR.
+        sys_rt_exec_state = 0;// Realtime executor bitflag variable for state management. See EXEC bitmasks.
+        sys_rt_exec_alarm = 0;// Realtime executor bitflag variable for setting various alarms.
+        sys_rt_exec_motion_override = 0;// Realtime executor bitflag variable for motion-based overrides.
+        sys_rt_exec_accessory_override = 0;// Realtime executor bitflag variable for spindle/coolant overrides.
 
 		// Reset Grbl-Advanced primary systems.
         GC_Init(); // G-Code interpreter Init

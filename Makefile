@@ -102,7 +102,7 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 #---------------------------------------------------------------------------------
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@make --no-print-directory -C $(BUILD) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).hex $(OUTPUT).lst -f $(CURDIR)/Makefile -j2
+	@$(MAKE) --no-print-directory -C $(BUILD) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).hex $(OUTPUT).lst -f $(CURDIR)/Makefile -j2
 	@$(SIZE) $(OUTPUT).elf
 
 #---------------------------------------------------------------------------------
