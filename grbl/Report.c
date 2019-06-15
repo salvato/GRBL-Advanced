@@ -45,43 +45,43 @@
 
 
 // Internal report utilities to reduce flash with repetitive tasks turned into functions.
-static void Report_SettingPrefix(uint8_t n)
-{
+static void
+Report_SettingPrefix(uint8_t n) {
 	Putc('$');
 	Printf("%d", n);
 	Putc('=');
 }
 
 
-static void Report_LineFeed(void)
-{
+static void
+Report_LineFeed(void) {
 	Putc('\r');
 	Putc('\n');
 	Print_Flush();
 }
 
 
-static void report_util_feedback_line_feed(void)
-{
+static void
+report_util_feedback_line_feed(void) {
 	Putc(']');
 	Report_LineFeed();
 }
 
 
-static void report_util_gcode_modes_G(void)
-{
+static void
+report_util_gcode_modes_G(void) {
 	Printf(" G");
 }
 
 
-static void report_util_gcode_modes_M(void)
-{
+static void
+report_util_gcode_modes_M(void) {
 	Printf(" M");
 }
 
 
-static void Report_AxisValue(float *axis_value)
-{
+static void
+Report_AxisValue(float *axis_value) {
 	uint8_t idx;
 
 	for(idx = 0; idx < N_AXIS; idx++) {
@@ -94,16 +94,16 @@ static void Report_AxisValue(float *axis_value)
 }
 
 
-static void report_util_uint8_setting(uint8_t n, int val)
-{
+static void
+report_util_uint8_setting(uint8_t n, int val) {
 	Report_SettingPrefix(n);
 	Printf("%d", val);
 	Report_LineFeed(); // report_util_setting_string(n);
 }
 
 
-static void report_util_float_setting(uint8_t n, float val, uint8_t n_decimal)
-{
+static void
+report_util_float_setting(uint8_t n, float val, uint8_t n_decimal) {
 	Report_SettingPrefix(n);
 	PrintFloat(val, n_decimal);
 	Report_LineFeed(); // report_util_setting_string(n);
@@ -116,8 +116,8 @@ static void report_util_float_setting(uint8_t n, float val, uint8_t n_decimal)
 // operation. Errors events can originate from the g-code parser, settings module, or asynchronously
 // from a critical error, such as a triggered hard limit. Interface should always monitor for these
 // responses.
-void Report_StatusMessage(uint8_t status_code)
-{
+void
+Report_StatusMessage(uint8_t status_code) {
 	switch(status_code)
 	{
 	case STATUS_OK: // STATUS_OK
@@ -135,8 +135,8 @@ void Report_StatusMessage(uint8_t status_code)
 
 
 // Prints alarm messages.
-void Report_AlarmMessage(uint8_t alarm_code)
-{
+void
+Report_AlarmMessage(uint8_t alarm_code) {
 	Printf("ALARM:");
 	Printf("%d", alarm_code);
 	Report_LineFeed();
@@ -150,8 +150,8 @@ void Report_AlarmMessage(uint8_t alarm_code)
 // messages such as setup warnings, switch toggling, and how to exit alarms.
 // NOTE: For interfaces, messages are always placed within brackets. And if silent mode
 // is installed, the message number codes are less than zero.
-void Report_FeedbackMessage(uint8_t message_code)
-{
+void
+Report_FeedbackMessage(uint8_t message_code) {
 	Printf("[MSG:");
 
 	switch(message_code)
@@ -206,8 +206,8 @@ void Report_FeedbackMessage(uint8_t message_code)
 
 
 // Welcome message
-void Report_InitMessage(void)
-{
+void
+Report_InitMessage(void) {
 	//Printf("\r\nGRBL-Advanced %s ['$' for help]\r\n", GRBL_VERSION);
 	Printf("\r\nGrbl 1.1f ['$' for help]\r\n");
 	Print_Flush();
@@ -215,7 +215,8 @@ void Report_InitMessage(void)
 
 
 // Grbl help message
-void Report_GrblHelp(void) {
+void
+Report_GrblHelp(void) {
 	Printf("[HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $SLP $C $X $H ~ ! ? ctrl-x]\r\n");
 	Print_Flush();
 }
@@ -223,9 +224,10 @@ void Report_GrblHelp(void) {
 
 // Grbl global settings print out.
 // NOTE: The numbering scheme here must correlate to storing in settings.c
-void Report_GrblSettings(void) {
+void
+Report_GrblSettings(void) {
 	// Print Grbl settings.
-	report_util_uint8_setting(0, settings.system_flags);
+    report_util_uint8_setting(0, settings.system_flags);// Different from GRBL
 	report_util_uint8_setting(1, settings.stepper_idle_lock_time);
 	report_util_uint8_setting(2, settings.step_invert_mask);
 	report_util_uint8_setting(3, settings.dir_invert_mask);
@@ -236,7 +238,7 @@ void Report_GrblSettings(void) {
 	report_util_float_setting(11, settings.junction_deviation, N_DECIMAL_SETTINGVALUE);
 	report_util_float_setting(12, settings.arc_tolerance, N_DECIMAL_SETTINGVALUE);
 	report_util_uint8_setting(13, BIT_IS_TRUE(settings.flags, BITFLAG_REPORT_INCHES));
-	report_util_uint8_setting(14, settings.tool_change);
+    report_util_uint8_setting(14, settings.tool_change);// New to Advanced
 	report_util_uint8_setting(20, BIT_IS_TRUE(settings.flags, BITFLAG_SOFT_LIMIT_ENABLE));
 	report_util_uint8_setting(21, BIT_IS_TRUE(settings.flags, BITFLAG_HARD_LIMIT_ENABLE));
 	report_util_uint8_setting(22, BIT_IS_TRUE(settings.flags, BITFLAG_HOMING_ENABLE));
@@ -256,10 +258,8 @@ void Report_GrblSettings(void) {
 	uint8_t idx, set_idx;
 	uint8_t val = AXIS_SETTINGS_START_VAL;
 
-	for(set_idx = 0; set_idx < AXIS_N_SETTINGS; set_idx++)
-    {
-		for(idx = 0; idx < N_AXIS; idx++)
-        {
+    for(set_idx = 0; set_idx < AXIS_N_SETTINGS; set_idx++) {
+        for(idx = 0; idx < N_AXIS; idx++) {
 			switch(set_idx)
             {
 			case 0:
@@ -296,8 +296,8 @@ void Report_GrblSettings(void) {
 // Prints current probe parameters. Upon a probe command, these parameters are updated upon a
 // successful probe or upon a failed probe with the G38.3 without errors command (if supported).
 // These values are retained until Grbl is power-cycled, whereby they will be re-zeroed.
-void Report_ProbeParams(void)
-{
+void
+Report_ProbeParams(void) {
 	float print_position[N_AXIS];
 
 	// Report in terms of machine position.
@@ -310,8 +310,8 @@ void Report_ProbeParams(void)
 }
 
 
-void Report_TLSParams(void)
-{
+void
+Report_TLSParams(void) {
     float print_position[N_AXIS];
     uint8_t idx = 0;
 
@@ -334,8 +334,8 @@ void Report_TLSParams(void)
 
 
 // Prints Grbl NGC parameters (coordinate offsets, probing)
-void Report_NgcParams(void)
-{
+void
+Report_NgcParams(void) {
 	float coord_data[N_AXIS];
 	uint8_t coord_select;
 
@@ -382,8 +382,8 @@ void Report_NgcParams(void)
 
 
 // Print current gcode parser mode state
-void Report_GCodeModes(void)
-{
+void
+Report_GCodeModes(void) {
 	Printf("[GC:G");
 
 	if(gc_state.modal.motion >= MOTION_MODE_PROBE_TOWARD) {
@@ -489,8 +489,8 @@ void Report_GCodeModes(void)
 
 
 // Prints specified startup line
-void Report_StartupLine(uint8_t n, char *line)
-{
+void
+Report_StartupLine(uint8_t n, char *line) {
 	Printf("$N");
 	Printf("%d", n);
 	Putc('=');
@@ -499,8 +499,8 @@ void Report_StartupLine(uint8_t n, char *line)
 }
 
 
-void Report_ExecuteStartupMessage(char *line, uint8_t status_code)
-{
+void
+Report_ExecuteStartupMessage(char *line, uint8_t status_code) {
 	Putc('>');
 	Printf("%s", line);
 	Putc(':');
@@ -509,8 +509,8 @@ void Report_ExecuteStartupMessage(char *line, uint8_t status_code)
 
 
 // Prints build info line
-void Report_BuildInfo(char *line)
-{
+void
+Report_BuildInfo(char *line) {
 	Printf("[VER: %s %s:", GRBL_VERSION, GRBL_VERSION_BUILD);
 	Printf("%s", line);
 	report_util_feedback_line_feed();
@@ -587,8 +587,8 @@ void Report_BuildInfo(char *line)
 
 // Prints the character string line Grbl has received from the user, which has been pre-parsed,
 // and has been sent into protocol_execute_line() routine to be executed by Grbl.
-void Report_EchoLineReceived(char *line)
-{
+void
+Report_EchoLineReceived(char *line) {
 	Printf("[echo: ");
 	Printf("%s", line);
 	report_util_feedback_line_feed();
@@ -600,8 +600,8 @@ void Report_EchoLineReceived(char *line)
  // specific needs, but the desired real-time data report must be as short as possible. This is
  // requires as it minimizes the computational overhead and allows grbl to keep running smoothly,
  // especially during g-code programs with fast, short line segments and high frequency reports (5-20Hz).
-void Report_RealtimeStatus(void)
-{
+void
+Report_RealtimeStatus(void) {
 	uint8_t idx;
 	int32_t current_position[N_AXIS]; // Copy current state of the system position variable
 	float print_position[N_AXIS];
@@ -715,7 +715,7 @@ void Report_RealtimeStatus(void)
 	// Report current line number
 	Planner_Block_t * cur_block = Planner_GetCurrentBlock();
 	if(cur_block != NULL) {
-		uint32_t ln = cur_block->line_number;
+        uint32_t ln = (uint32_t)cur_block->line_number;
 
 		if(ln > 0) {
 			Printf("|Ln:");
