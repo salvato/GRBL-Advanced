@@ -36,14 +36,11 @@ static uint8_t spindle_enabled = 0;
 
 void
 Spindle_Init(void) {
-    // Configure variable spindle PWM and enable pin, if requried. On the Uno, PWM and enable are
-    // combined unless configured otherwise.
+    // Configure variable spindle PWM and enable pin, if required.
+    // On the Uno, PWM and enable are combined unless configured otherwise.
     GPIO_InitGPIO(GPIO_SPINDLE);
-
     TIM1_Init();
-
     pwm_gradient = SPINDLE_PWM_RANGE/(settings.rpm_max-settings.rpm_min);
-
 	Spindle_Stop();
 }
 
@@ -55,7 +52,6 @@ void
 Spindle_Stop(void) {
 	TIM1->CCR1 = 100; // Disable PWM. Output voltage is zero.
 	spindle_enabled = 0;
-
 #ifdef INVERT_SPINDLE_ENABLE_PIN
     GPIO_SetBits(GPIO_SPINDLE_ENA_PORT, GPIO_SPINDLE_ENA_PIN);
 #else
@@ -113,8 +109,8 @@ Spindle_SetSpeed(uint8_t pwm_value) {
 
 
 // Called by spindle_set_state() and step segment generator. Keep routine small and efficient.
-uint8_t Spindle_ComputePwmValue(float rpm) // 328p PWM register is 8-bit.
-{
+uint8_t
+Spindle_ComputePwmValue(float rpm) {// 328p PWM register is 8-bit.
 	uint8_t pwm_value;
 
     rpm *= (0.010f*sys.spindle_speed_ovr); // Scale by spindle speed override value.
