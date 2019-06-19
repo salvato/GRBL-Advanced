@@ -5,6 +5,7 @@
   Copyright (c) 2012-2016 Sungeun K. Jeon for Gnea Research LLC
   Copyright (c) 2009-2011 Simen Svale Skogsrud
   Copyright (c)	2017 Patrick F.
+  Copyright (c) 2019 Gabriele S.
 
   Grbl-Advanced is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -87,7 +88,7 @@
 #define CMD_SPINDLE_OVR_COARSE_MINUS 	0x9B
 #define CMD_SPINDLE_OVR_FINE_PLUS 		0x9C
 #define CMD_SPINDLE_OVR_FINE_MINUS 		0x9D
-#define CMD_SPINDLE_OVR_STOP 0x9E
+#define CMD_SPINDLE_OVR_STOP            0x9E
 #define CMD_COOLANT_FLOOD_OVR_TOGGLE 	0xA0
 #define CMD_COOLANT_MIST_OVR_TOGGLE 	0xA1
 
@@ -113,12 +114,12 @@
 // on separate pin, but homed in one cycle. Also, it should be noted that the function of hard limits
 // will not be affected by pin sharing.
 // NOTE: Defaults are set for a traditional 3-axis CNC machine. Z-axis first to clear, followed by X & Y.
-#define HOMING_CYCLE_0 		(1<<Z_AXIS)                // REQUIRED: First move Z to clear workspace.
-#define HOMING_CYCLE_1 		((1<<X_AXIS)|(1<<Y_AXIS))  // OPTIONAL: Then move X,Y at the same time.
+//#define HOMING_CYCLE_0 		(1<<Z_AXIS)                // REQUIRED: First move Z to clear workspace.
+//#define HOMING_CYCLE_1 		((1<<X_AXIS)|(1<<Y_AXIS))  // OPTIONAL: Then move X,Y at the same time.
 // #define HOMING_CYCLE_2                         // OPTIONAL: Uncomment and add axes mask to enable
 
 // NOTE: The following are two examples to setup homing for 2-axis machines.
-//#define HOMING_CYCLE_0 	((1<<X_AXIS)|(1<<Y_AXIS))  // NOT COMPATIBLE WITH COREXY: Homes both X-Y in one cycle.
+#define HOMING_CYCLE_0 	((1<<X_AXIS)|(1<<Y_AXIS))  // NOT COMPATIBLE WITH COREXY: Homes both X-Y in one cycle.
 
 //#define HOMING_CYCLE_0 	(1<<X_AXIS)  // COREXY COMPATIBLE: First home X
 //#define HOMING_CYCLE_1 	(1<<Y_AXIS)  // COREXY COMPATIBLE: Then home Y
@@ -185,8 +186,8 @@
 
 // After the safety door switch has been toggled and restored, this setting sets the power-up delay
 // between restoring the spindle and coolant and resuming the cycle.
-#define SAFETY_DOOR_SPINDLE_DELAY	2.0 // Float (seconds)
-#define SAFETY_DOOR_COOLANT_DELAY	1.0 // Float (seconds)
+#define SAFETY_DOOR_SPINDLE_DELAY	2.0f // Float (seconds)
+#define SAFETY_DOOR_COOLANT_DELAY	1.0f // Float (seconds)
 
 
 // Enable CoreXY kinematics. Use ONLY with CoreXY machines.
@@ -207,12 +208,8 @@
 // NOTE: PLEASE DO NOT USE THIS, unless you have a situation that needs it.
 //#define INVERT_LIMIT_PIN_MASK	((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)) // Default disabled. Uncomment to enable.
 
-
 // Inverts the spindle enable pin from low-disabled/high-enabled to low-enabled/high-disabled. Useful
 // for some pre-built electronic boards.
-// NOTE: If VARIABLE_SPINDLE is enabled(default), this option has no effect as the PWM output and
-// spindle enable are combined to one pin. If you need both this option and spindle speed PWM,
-// uncomment the config option USE_SPINDLE_DIR_AS_ENABLE_PIN below.
 //#define INVERT_SPINDLE_ENABLE_PIN // Default disabled. Uncomment to enable.
 
 
@@ -339,10 +336,7 @@
 #define TOOL_LENGTH_OFFSET_AXIS		Z_AXIS // Default z-axis. Valid values are X_AXIS, Y_AXIS, or Z_AXIS.
 
 
-// Enables variable spindle output voltage for different RPM values. On the Arduino Uno, the spindle
-// enable pin will output 5V for maximum RPM with 256 intermediate levels and 0V when disabled.
-// NOTE: IMPORTANT for Arduino Unos! When enabled, the Z-limit pin D11 and spindle enable pin D12 switch!
-// The hardware PWM output on pin D11 is required for variable spindle output voltages.
+// Enables variable spindle output voltage for different RPM values.
 #define VARIABLE_SPINDLE // Default enabled. Comment to disable.
 
 
@@ -358,13 +352,13 @@
 //#define SPINDLE_PWM_MIN_VALUE 5 // Default disabled. Uncomment to enable. Must be greater than zero. Integer (1-255).
 
 
-// Alters the behavior of the spindle enable pin with the USE_SPINDLE_DIR_AS_ENABLE_PIN option . By default,
-// Grbl will not disable the enable pin if spindle speed is zero and M3/4 is active, but still sets the PWM
-// output to zero. This allows the users to know if the spindle is active and use it as an additional control
-// input. However, in some use cases, user may want the enable pin to disable with a zero spindle speed and
+// Alters the behavior of the spindle enable pin.
+// By default, Grbl will not disable the enable pin if spindle speed is zero and M3/4 is active,
+// but still sets the PWM output to zero.
+// This allows the users to know if the spindle is active and use it as an additional control input.
+// However, in some use cases, user may want the enable pin to disable with a zero spindle speed and
 // re-enable when spindle speed is greater than zero. This option does that.
-// NOTE: Requires USE_SPINDLE_DIR_AS_ENABLE_PIN to be enabled.
-//#define SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED // Default disabled. Uncomment to enable.
+#define SPINDLE_ENABLE_OFF_WITH_ZERO_SPEED // Default disabled. Uncomment to enable.
 
 
 // With this enabled, Grbl sends back an echo of the line it has received, which has been pre-parsed (spaces
@@ -383,14 +377,14 @@
 // limits or angle between neighboring block line move directions. This is useful for machines that can't
 // tolerate the tool dwelling for a split second, i.e. 3d printers or laser cutters. If used, this value
 // should not be much greater than zero or to the minimum value necessary for the machine to work.
-#define MINIMUM_JUNCTION_SPEED		0.0 // (mm/min)
+#define MINIMUM_JUNCTION_SPEED		0.0f // (mm/min)
 
 
 // Sets the minimum feed rate the planner will allow. Any value below it will be set to this minimum
 // value. This also ensures that a planned motion always completes and accounts for any floating-point
 // round-off errors. Although not recommended, a lower value than 1.0 mm/min will likely work in smaller
 // machines, perhaps to 0.1mm/min, but your success may vary based on multiple factors.
-#define MINIMUM_FEED_RATE			1.0 // (mm/min)
+#define MINIMUM_FEED_RATE			1.0f // (mm/min)
 
 
 // Number of arc generation iterations by small angle approximation before exact arc trajectory
@@ -408,7 +402,7 @@
 // This define value sets the machine epsilon cutoff to determine if the arc is a full-circle or not.
 // NOTE: Be very careful when adjusting this value. It should always be greater than 1.2e-7 but not too
 // much greater than this. The default setting should capture most, if not all, full arc error situations.
-#define ARC_ANGULAR_TRAVEL_EPSILON	5E-7 // Float (radians)
+#define ARC_ANGULAR_TRAVEL_EPSILON	5E-7f // Float (radians)
 
 
 // Time delay increments performed during a dwell. The default value is set at 50ms, which provides
