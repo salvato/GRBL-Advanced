@@ -77,8 +77,9 @@ Spindle_GetState(void) {
 }
 
 
-// Sets spindle speed PWM output and enable pin, if configured. Called by spindle_set_state()
-// and stepper ISR. Keep routine small and efficient.
+// Sets spindle speed PWM output and enable pin, if configured.
+// Called by spindle_set_state() and stepper ISR.
+// Keep routine small and efficient.
 void
 Spindle_SetSpeed(uint8_t pwm_value) {
 	TIM1->CCR1 = 100 - pwm_value; // Set PWM output level.
