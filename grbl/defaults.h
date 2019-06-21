@@ -18,8 +18,6 @@
   along with Grbl-Advanced.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Config.h"
-
 /* The defaults.h file serves as a central default settings selector for different machine
    types, from DIY CNC mills to CNC conversions of off-the-shelf machines. The settings
    files listed here are supplied by users, so your results may vary. However, this should
@@ -28,6 +26,8 @@
    NOTE: Ensure one and only one of these DEFAULTS_XXX values is defined in config.h */
 #ifndef DEFAULTS_H
 #define DEFAULTS_H
+
+#include "Config.h"
 
 
 #ifdef DEFAULTS_GENERIC
