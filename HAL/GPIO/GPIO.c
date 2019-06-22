@@ -135,7 +135,7 @@ GPIO_InitSpindle(void) {
     GPIO_Init(GPIO_SPINDLE_PWM_PORT, &GPIO_InitStructure);
 
 	// Connect timer to pin
-    GPIO_PinAFConfig(GPIO_SPINDLE_PWM_PORT, GPIO_PinSource7, GPIO_AF_TIM1);
+    GPIO_PinAFConfig(GPIO_SPINDLE_PWM_PORT, GPIO_SPINDLE_PWM_SOURCE_PIN, GPIO_AF_TIM1);
 }
 
 
