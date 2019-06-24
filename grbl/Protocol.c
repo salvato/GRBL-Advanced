@@ -215,8 +215,9 @@ Protocol_MainLoop(void) {
 }// Protocol_MainLoop()
 
 
-// Block until all buffered steps are executed or in a cycle state. Works with feed hold
-// during a synchronize call, if it should happen. Also, waits for clean cycle end.
+// Block until all buffered steps are executed or in a cycle state.
+// Works with feed hold during a synchronize call, if it should happen.
+// Also, waits for clean cycle end.
 void
 Protocol_BufferSynchronize(void) {
 	// If system is queued, ensure cycle resumes if the auto start flag is present.

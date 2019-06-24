@@ -82,7 +82,6 @@ main(void) {
     // Init SysTick 1ms
 	SysTick_Init();
 
-
     if(BIT_IS_TRUE(settings.flags, BITFLAG_HOMING_ENABLE)) {
 		sys.state = STATE_ALARM;
     }
@@ -91,23 +90,23 @@ main(void) {
     }
 
     // Grbl-Advanced initialization loop upon power-up or a system abort.
-    // For the latter, all processes will return to this loop to be cleanly re-initialized.
+    // For the latter, all processes will return to this loop to be cleanly
+    // re-initialized.
     while(1) {
 		// Reset system variables.
 		uint16_t prior_state = sys.state;
 		uint8_t home_state = sys.is_homed;
+        System_Clear();           // Clear sys struct variable
+        sys.state = prior_state;  // Restore previous system state
+        sys.is_homed = home_state;// and homing state.
 
-        System_Clear();// Clear sys struct variable
-		sys.state = prior_state;
-		sys.is_homed = home_state;
+        Probe_Reset();// Clear probe position structure
 
-        Probe_Reset();// Clear probe position
-
-		sys_probe_state = 0;
-		sys_rt_exec_state = 0;
-		sys_rt_exec_alarm = 0;
-		sys_rt_exec_motion_override = 0;
-		sys_rt_exec_accessory_override = 0;
+        sys_probe_state = 0;// Used to coordinate the probing cycle with stepper ISR.
+        sys_rt_exec_state = 0;// Realtime executor bitflag variable for state management. See EXEC bitmasks.
+        sys_rt_exec_alarm = 0;// Realtime executor bitflag variable for setting various alarms.
+        sys_rt_exec_motion_override = 0;// Realtime executor bitflag variable for motion-based overrides.
+        sys_rt_exec_accessory_override = 0;// Realtime executor bitflag variable for spindle/coolant overrides.
 
 		// Reset Grbl-Advanced primary systems.
         GC_Init(); // G-Code interpreter Init
@@ -125,17 +124,17 @@ main(void) {
         Planner_SyncPosition(); // Reset the planner position vectors.
         GC_SyncPosition(); // Sets g-code parser position in mm. Input in steps.
 
-		// Print welcome message. Indicates an initialization has occured at power-up or with a reset.
+        // Print welcome message.
+        // Indicates an initialization has occured at power-up or with a reset.
 		Report_InitMessage();
 
-        //--------------------------------------------------------------------------------//
-        //-- Start Grbl-Advanced main loop. Processes program inputs and executes them. --//
-        Protocol_MainLoop(); // In Protocol.c !
-		//--------------------------------------------------------------------------------//
+        //-------------------------------------------------------------------//
+        //-- Start Grbl-Advanced main loop.
+        //-- Processes program inputs and executes them.
+        Protocol_MainLoop(); // defined in Protocol.c
 
         // Clear serial buffer after soft reset to prevent undefined behavior
 		FifoUsart_Init();
 	}
-
-    // return 0;
+    // return 0; (Never reached !)
 }

@@ -97,12 +97,12 @@ export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 
-.PHONY: $(BUILD) clean flash
+.PHONY: $(BUILD) clean install
 
 #---------------------------------------------------------------------------------
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@make --no-print-directory -C $(BUILD) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).hex $(OUTPUT).lst -f $(CURDIR)/Makefile -j2
+	@$(MAKE) --no-print-directory -C $(BUILD) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).hex $(OUTPUT).lst -f $(CURDIR)/Makefile -j2
 	@$(SIZE) $(OUTPUT).elf
 
 #---------------------------------------------------------------------------------
@@ -110,7 +110,7 @@ clean:
 	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).hex $(OUTPUT).map $(OUTPUT).lst
 
 #---------------------------------------------------------------------------------
-flash: $(OUTPUT).bin
+install: $(OUTPUT).bin
 	st-flash write $(OUTPUT).bin 0x8000000
 
 #---------------------------------------------------------------------------------

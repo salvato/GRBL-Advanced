@@ -54,21 +54,21 @@ static uint8_t block_buffer_planned;  // Index of the optimally planned block
 
 
 
-void Planner_Init(void)
-{
+void
+Planner_Init(void){
 	Planner_Reset();
 }
 
 
-void Planner_Reset(void)
-{
+void
+Planner_Reset(void) {
 	memset(&planner, 0, sizeof(Planner_t)); // Clear planner struct
 	Planner_ResetBuffer();
 }
 
 
-void Planner_ResetBuffer(void)
-{
+void
+Planner_ResetBuffer(void) {
 	block_buffer_tail = 0;
 	block_buffer_head = 0; // Empty = tail
 	next_buffer_head = 1; // plan_next_block_index(block_buffer_head)
@@ -90,8 +90,8 @@ void Planner_ResetBuffer(void)
    head. It avoids changing the planner state and preserves the buffer to ensure subsequent gcode
    motions are still planned correctly, while the stepper module only points to the block buffer head
    to execute the special system motion. */
-uint8_t Planner_BufferLine(float *target, Planner_LineData_t *pl_data)
-{
+uint8_t
+Planner_BufferLine(float *target, Planner_LineData_t *pl_data) {
 	// Prepare and initialize new block. Copy relevant pl_data for block execution.
 	Planner_Block_t *block = &block_buffer[block_buffer_head];
 	memset(block, 0, sizeof(Planner_Block_t)); // Zero all block values.
@@ -149,14 +149,14 @@ uint8_t Planner_BufferLine(float *target, Planner_LineData_t *pl_data)
 		}
 #else
 		target_steps[idx] = lround(target[idx]*settings.steps_per_mm[idx]);
-		block->steps[idx] = labs(target_steps[idx]-position_steps[idx]);
+        block->steps[idx] = labs(target_steps[idx]-position_steps[idx]);
 		block->step_event_count = max(block->step_event_count, block->steps[idx]);
 		delta_mm = (target_steps[idx] - position_steps[idx])/settings.steps_per_mm[idx];
 #endif
 		unit_vec[idx] = delta_mm; // Store unit vector numerator
 
 		// Set direction bits. Bit enabled always means direction is negative.
-		if(delta_mm < 0.0) {
+        if(delta_mm < 0.0f) {
 			block->direction_bits |= Settings_GetDirectionPinMask(idx);
 		}
 	}
@@ -223,20 +223,20 @@ uint8_t Planner_BufferLine(float *target, Planner_LineData_t *pl_data)
 		}
 
 		// NOTE: Computed without any expensive trig, sin() or acos(), by trig half angle identity of cos(theta).
-		if(junction_cos_theta > 0.999999) {
+        if(junction_cos_theta > 0.999999f) {
 			//  For a 0 degree acute junction, just set minimum junction speed.
 			block->max_junction_speed_sqr = MINIMUM_JUNCTION_SPEED*MINIMUM_JUNCTION_SPEED;
 		}
 		else {
-			if(junction_cos_theta < -0.999999) {
+            if(junction_cos_theta < -0.999999f) {
 				// Junction is a straight line or 180 degrees. Junction speed is infinite.
 				block->max_junction_speed_sqr = SOME_LARGE_VALUE;
 			} else {
 				convert_delta_vector_to_unit_vector(junction_unit_vec);
 				float junction_acceleration = limit_value_by_axis_maximum(settings.acceleration, junction_unit_vec);
-				float sin_theta_d2 = sqrt(0.5*(1.0-junction_cos_theta)); // Trig half angle identity. Always positive.
+                float sin_theta_d2 = sqrtf(0.5f*(1.0f-junction_cos_theta)); // Trig half angle identity. Always positive.
 
-				block->max_junction_speed_sqr = max(MINIMUM_JUNCTION_SPEED*MINIMUM_JUNCTION_SPEED, (junction_acceleration * settings.junction_deviation * sin_theta_d2)/(1.0-sin_theta_d2));
+                block->max_junction_speed_sqr = max(MINIMUM_JUNCTION_SPEED*MINIMUM_JUNCTION_SPEED, (junction_acceleration * settings.junction_deviation * sin_theta_d2)/(1.0f-sin_theta_d2));
 			}
 		}
 	}
@@ -331,11 +331,11 @@ float Planner_ComputeProfileNominalSpeed(Planner_Block_t *block)
 	float nominal_speed = block->programmed_rate;
 
 	if(block->condition & PL_COND_FLAG_RAPID_MOTION) {
-		nominal_speed *= (0.01*sys.r_override);
+        nominal_speed *= (0.01f*sys.r_override);
 	}
 	else {
 		if(!(block->condition & PL_COND_FLAG_NO_FEED_OVERRIDE)) {
-			nominal_speed *= (0.01*sys.f_override);
+            nominal_speed *= (0.01f*sys.f_override);
 		}
 		if(nominal_speed > block->rapid_rate) {
 			nominal_speed = block->rapid_rate;

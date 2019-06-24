@@ -91,11 +91,11 @@
 
 // Conversions
 #define MM_PER_INCH 				(25.40f)
-#define INCH_PER_MM 				(0.0393701)
+#define INCH_PER_MM 				(0.0393701f)
 #define TICKS_PER_MICROSECOND 		(24UL)
 
 
-#define SOME_LARGE_VALUE 			1.0E+38
+#define SOME_LARGE_VALUE 			1.0E+38f
 
 
 #define ACCEL_TICKS_PER_SECOND 		100

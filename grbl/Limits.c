@@ -63,9 +63,10 @@ Limits_Disable(void) {
 }
 
 
-// Returns limit state as a bit-wise uint8 variable. Each bit indicates an axis limit, where
-// triggered is 1 and not triggered is 0. Invert mask is applied. Axes are defined by their
-// number in bit position, i.e. Z_AXIS is (1<<2) or bit 2, and Y_AXIS is (1<<1) or bit 1.
+// Returns limit state as a bit-wise uint8 variable.
+// Each bit indicates an axis limit, where triggered is 1 and not triggered is 0.
+// Invert mask is applied. Axes are defined by their number in bit position,
+// i.e. Z_AXIS is (1<<2) or bit 2, and Y_AXIS is (1<<1) or bit 1.
 uint8_t
 Limits_GetState(void) {
 	uint8_t limit_state = 0;
