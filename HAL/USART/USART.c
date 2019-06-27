@@ -18,13 +18,16 @@
 #include <stdio.h>
 #include "USART.h"
 #include "FIFO_USART.h"
+#include "stm32f4xx_gpio.h"
+#include "stm32f4xx_rcc.h"
+#include "misc.h"
 
 
 static uint8_t FifoInit = 0;
 
 
-void Usart_Init(USART_TypeDef *usart, uint32_t baud)
-{
+void
+Usart_Init(USART_TypeDef *usart, uint32_t baud) {
 	USART_InitTypeDef USART_InitStructure;
 	GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -71,7 +74,8 @@ void Usart_Init(USART_TypeDef *usart, uint32_t baud)
 		NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 		NVIC_Init(&NVIC_InitStructure);
 
-	} else if(usart == USART2) {
+    }
+    else if(usart == USART2) {
 		/* Enable GPIO clock */
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
@@ -109,7 +113,8 @@ void Usart_Init(USART_TypeDef *usart, uint32_t baud)
 		NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 		NVIC_Init(&NVIC_InitStructure);
 
-	} else if(usart == USART6) {
+    }
+    else if(usart == USART6) {
 		/* Enable GPIO clock */
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART6, ENABLE);
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
@@ -156,96 +161,84 @@ void Usart_Init(USART_TypeDef *usart, uint32_t baud)
 	USART_Cmd(usart, ENABLE);
 }
 
-void Usart_Put(USART_TypeDef *usart, bool buffered, char c)
-{
+
+void
+Usart_Put(USART_TypeDef *usart, bool buffered, char c) {
     uint8_t num = 0;
 
-    if(usart == USART1)
-    {
+    if(usart == USART1) {
         num = USART1_NUM;
     }
-    else if(usart == USART2)
-    {
+    else if(usart == USART2) {
         num = USART2_NUM;
     }
-    else if(usart == USART6)
-    {
+    else if(usart == USART6) {
         num = USART6_NUM;
     }
 
-	if(buffered)
-    {
+    if(buffered) {
         FifoUsart_Insert(num, USART_DIR_TX, c);
 
         // Enable sending via interrupt
         Usart_TxInt(usart, true);
     }
-    else
-    {
+    else {
         while(USART_GetFlagStatus(usart, USART_FLAG_TC) == RESET){
         }
 		USART_SendData(usart, c);
     }
 }
 
-void Usart_Write(USART_TypeDef *usart, bool buffered, char *data, uint8_t len)
-{
+
+void
+Usart_Write(USART_TypeDef *usart, bool buffered, char *data, uint8_t len) {
 	uint8_t i = 0;
 	uint8_t num = 0;
 
-    if(usart == USART1)
-    {
+    if(usart == USART1) {
         num = USART1_NUM;
     }
-    else if(usart == USART2)
-    {
+    else if(usart == USART2) {
         num = USART2_NUM;
     }
-    else if(usart == USART6)
-    {
+    else if(usart == USART6) {
         num = USART6_NUM;
     }
 
-    if(buffered)
-    {
-        while(len--)
-        {
+    if(buffered) {
+        while(len--) {
             FifoUsart_Insert(num, USART_DIR_TX, data[i++]);
         }
 
         // Enable sending via interrupt
         Usart_TxInt(usart, true);
     }
-    else
-    {
-		while(len--)
-        {
+    else {
+        while(len--) {
             while(USART_GetFlagStatus(usart, USART_FLAG_TC) == RESET);
             USART_SendData(usart, data[i++]);
         }
     }
 }
 
-void Usart_TxInt(USART_TypeDef *usart, bool enable)
-{
-	if(enable)
-	{
+
+void
+Usart_TxInt(USART_TypeDef *usart, bool enable) {
+    if(enable) {
 		USART_ITConfig(usart, USART_IT_TXE, ENABLE);
 	}
-	else
-	{
+    else {
 		USART_ITConfig(usart, USART_IT_TXE, DISABLE);
 	}
 }
 
-void Usart_RxInt(USART_TypeDef *usart, bool enable)
-{
-	if(enable)
-	{
+
+void
+Usart_RxInt(USART_TypeDef *usart, bool enable) {
+    if(enable) {
 		USART_ITConfig(usart, USART_IT_RXNE, ENABLE);
 	}
-	else
-	{
+    else {
 		USART_ITConfig(usart, USART_IT_RXNE, DISABLE);
 	}
 }
