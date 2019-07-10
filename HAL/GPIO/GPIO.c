@@ -177,7 +177,7 @@ GPIO_InitCoolant(void) {
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(GPIO_COOL_FLOOD_PORT, &GPIO_InitStructure);
 
-    // GPIO Configuration (GPIO PortB):
+    // GPIO Configuration (GPIO PortC):
     // Arduino pin#                      A4
     GPIO_InitStructure.GPIO_Pin = GPIO_COOL_MIST_PIN;
     GPIO_Init(GPIO_COOL_MIST_PORT, &GPIO_InitStructure);
