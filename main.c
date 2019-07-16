@@ -23,10 +23,12 @@
 
 #include "System32.h"
 #include "grbl_advance.h"
+#ifdef ETH_IF
 #include "Ethernet.h"
 #include "GrIP.h"
 #include "ServerTCP.h"
 #include "util2.h"
+#endif
 
 #include "Print.h"
 #include "FIFO_USART.h"
@@ -74,10 +76,9 @@ main(void) {
 
     // Initialize TCP server
     ServerTCP_Init(ETH_SOCK, ETH_PORT);
-#endif
-
     // Initialize GrIP protocol
     GrIP_Init();
+#endif
 
     // Init SysTick 1ms
 	SysTick_Init();
